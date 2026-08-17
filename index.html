@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090a0d">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>GUARDIAN // Mission Control</title>
+  <style>
+    :root{--bg:#07080a;--panel:#111318;--line:#252831;--text:#f3f4f6;--muted:#8e949f;--red:#ff2638;--green:#49e18a}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 50% -10%,#222630 0,#07080a 45%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    .wrap{max-width:720px;margin:auto;padding:28px 18px 44px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+    .brand{letter-spacing:4px;font-weight:800}.status{font-size:11px;color:var(--green);border:1px solid #245b42;border-radius:999px;padding:7px 10px}
+    .hero{border:1px solid var(--line);background:linear-gradient(145deg,#14161c,#0c0d11);border-radius:22px;padding:24px;box-shadow:0 20px 60px #0008}
+    .eyebrow{color:var(--red);font-size:11px;letter-spacing:2px;font-weight:800}.hero h1{font-size:38px;margin:8px 0}.hero p{color:var(--muted);line-height:1.5}
+    button{border:0;border-radius:13px;padding:13px 16px;font-weight:800;cursor:pointer}.primary{background:var(--red);color:white}.secondary{background:#1b1e25;color:white;border:1px solid var(--line)}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}.label{font-size:10px;color:var(--muted);letter-spacing:1.5px}.value{font-size:20px;font-weight:800;margin-top:6px}
+    .mission{margin-top:14px;padding:18px;background:#101217;border:1px solid var(--line);border-radius:18px}.mission-head{display:flex;justify-content:space-between}.priority{color:#ffb84d;font-size:11px}.mission h2{margin:9px 0}.mission p{color:#b0b5bf;line-height:1.45}
+    .actions{display:flex;gap:10px;margin-top:14px}.actions button{flex:1}.small{font-size:12px;color:var(--muted);margin-top:16px}
+    #log{margin-top:14px}.logrow{padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}.logrow span{color:var(--muted)}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><div class="brand">GUARDIAN</div><div class="status">● READY</div></div>
+
+  <section class="hero">
+    <div class="eyebrow">MISSION CONTROL // PERSONAL</div>
+    <h1 id="headline">Stand by.</h1>
+    <p>This first prototype is a personal mission dashboard. Missions are simulated or manually created; it is not an emergency-dispatch service.</p>
+    <button class="primary" onclick="requestNotifications()">ENABLE ALERTS</button>
+  </section>
+
+  <section class="grid">
+    <div class="card"><div class="label">SYSTEM</div><div class="value">ONLINE</div></div>
+    <div class="card"><div class="label">MISSIONS</div><div class="value" id="count">0</div></div>
+  </section>
+
+  <section class="mission">
+    <div class="mission-head"><div class="eyebrow">INCOMING MISSION</div><div class="priority">LOW PRIORITY</div></div>
+    <h2 id="missionTitle">No active mission</h2>
+    <p id="missionText">Press “Generate” to create a safe training or volunteer-style scenario.</p>
+    <div class="actions">
+      <button class="secondary" onclick="generateMission()">GENERATE</button>
+      <button class="primary" onclick="acceptMission()">ACCEPT</button>
+    </div>
+  </section>
+
+  <section class="mission">
+    <div class="eyebrow">MISSION LOG</div>
+    <div id="log"><div class="small">No missions yet.</div></div>
+  </section>
+
+  <div class="small">Tip: Add this site to your iPhone Home Screen for the app-like experience. Push notifications require a secure HTTPS deployment and iOS web-push support.</div>
+</main>
+
+<script>
+let active = null;
+let count = Number(localStorage.getItem("guardianCount") || 0);
+document.getElementById("count").textContent = count;
+
+const missions = [
+  ["TRAINING // NIGHT RESPONSE","Practice a safe route-planning drill and check your emergency kit."],
+  ["VOLUNTEER // CHECK-IN","Prepare a first-aid kit and review basic first-aid procedures."],
+  ["READINESS // EQUIPMENT","Inspect helmet, gloves, boots, lights and communication equipment."],
+  ["TRAINING // NAVIGATION","Complete a short navigation exercise without entering restricted areas."]
+];
+
+function generateMission(){
+  active = missions[Math.floor(Math.random()*missions.length)];
+  document.getElementById("missionTitle").textContent = active[0];
+  document.getElementById("missionText").textContent = active[1];
+  document.getElementById("headline").textContent = "Mission received.";
+  if ("vibrate" in navigator) navigator.vibrate([120,80,120]);
+}
+
+function acceptMission(){
+  if(!active){ generateMission(); return; }
+  count++; localStorage.setItem("guardianCount",count);
+  document.getElementById("count").textContent = count;
+  const row = document.createElement("div"); row.className="logrow";
+  row.innerHTML = `<b>${active[0]}</b><br><span>Accepted • ${new Date().toLocaleString()}</span>`;
+  const log=document.getElementById("log");
+  if(log.querySelector(".small")) log.innerHTML="";
+  log.prepend(row);
+  active=null;
+  document.getElementById("missionTitle").textContent="Mission accepted";
+  document.getElementById("missionText").textContent="Stay safe. This prototype does not contact emergency services.";
+}
+
+async function requestNotifications(){
+  if(!("Notification" in window)){ alert("Notifications are not supported in this browser/context."); return; }
+  const permission = await Notification.requestPermission();
+  alert(permission === "granted" ? "Alerts enabled. For real background push, deploy this PWA over HTTPS and add a push backend." : "Notification permission was not granted.");
+}
+
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

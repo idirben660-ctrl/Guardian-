@@ -1,0 +1,9 @@
+{
+  "name": "GUARDIAN Mission Control",
+  "short_name": "GUARDIAN",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07080a",
+  "theme_color": "#090a0d",
+  "description": "Personal mission dashboard prototype."
+}
